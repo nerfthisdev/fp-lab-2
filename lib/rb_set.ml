@@ -24,7 +24,13 @@ let rec mem x = function
 ;;
 
 let balance = function
-  (* TODO: make full balancing*)
+  | B, Node (R, Node (R, a, x, b), y, c), z, d (*LEFT LEFT*)
+  | B, Node (R, a, x, Node (R, b, y, c)), z, d (*LEFT RIGHT*)
+  | B, a, x, Node (R, Node (R, b, y, c), z, d) (*RIGHT LEFT*)
+  | B, a, x, Node (R, b, y, Node (R, c, z, d)) ->
+    (*RIGHT RIGHT*)
+    Node (R, Node (B, a, x, b), y, Node (B, c, z, d))
+  (*other*)
   | color, a, x, b -> Node (color, a, x, b)
 ;;
 
@@ -43,9 +49,6 @@ let add x t =
   | Empty -> assert false
   | Node (_, l, v, r) -> Node (B, l, v, r)
 ;;
-
-(*реализовать*)
-let remove _x t = t
 
 let rec to_list = function
   | Empty -> []
@@ -71,6 +74,7 @@ let rec fold_right f t acc =
     fold_right f l acc2
 ;;
 
+let remove x t = t |> to_list |> List.filter (fun y -> Stdlib.compare x y <> 0) |> of_list
 let map f t = to_list t |> List.map f |> of_list
 let filter p t = fold_left (fun acc x -> if p x then add x acc else acc) empty t
 let append a b = fold_left (fun acc x -> add x acc) a b
