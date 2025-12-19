@@ -26,6 +26,8 @@ build: [
     "@install"
     "@runtest" {with-test}
     "@doc" {with-doc}
+    "qcheck" {with-test & >= "0"}
+    "qcheck-alcotest" {with-test & >= "0"}
   ]
 ]
 dev-repo: "git+https://github.com/username/reponame.git"
