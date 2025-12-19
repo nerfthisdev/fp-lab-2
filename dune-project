@@ -19,7 +19,12 @@
  (name fp-lab-2)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml)
+ (depends
+  ocaml
+  (dune (>= 3.20))
+  (alcotest :with-test)
+  (qcheck :with-test)
+  (qcheck-alcotest :with-test))
  (tags
   ("add topics" "to describe" your project)))
 

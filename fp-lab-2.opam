@@ -10,8 +10,11 @@ homepage: "https://github.com/username/reponame"
 doc: "https://url/to/documentation"
 bug-reports: "https://github.com/username/reponame/issues"
 depends: [
-  "dune" {>= "3.20"}
   "ocaml"
+  "dune" {>= "3.20" & >= "3.20"}
+  "alcotest" {with-test}
+  "qcheck" {with-test}
+  "qcheck-alcotest" {with-test}
   "odoc" {with-doc}
 ]
 build: [
@@ -26,8 +29,6 @@ build: [
     "@install"
     "@runtest" {with-test}
     "@doc" {with-doc}
-    "qcheck" {with-test & >= "0"}
-    "qcheck-alcotest" {with-test & >= "0"}
   ]
 ]
 dev-repo: "git+https://github.com/username/reponame.git"
