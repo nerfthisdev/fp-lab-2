@@ -1,6 +1,7 @@
 open Fp_lab_2
 module S = Rb_set
 
+(*unit tests*)
 let test_empty_is_empty () =
   let s : int S.t = S.empty in
   Alcotest.(check bool) "empty is empty" true (S.is_empty s)
@@ -60,9 +61,89 @@ let unit_tests =
   ]
 ;;
 
-(*WRITE PROPERTY TESTS WITH Q_CHECK*)
+(*prop tests*)
+
+(* prop tests *)
+let qcheck_tests =
+  let open QCheck in
+  (* Генератор случайных множеств int:
+     берём список ints -> превращаем в set *)
+  let gen_int_set : int S.t arbitrary =
+    make
+      ~print:(fun s ->
+        (* удобно, чтобы QCheck печатал контрпример *)
+        let xs = S.to_list s in
+        "[" ^ String.concat "; " (List.map string_of_int xs) ^ "]")
+      Gen.(map S.of_list (list small_int))
+  in
+  (* Набор предикатов, чтобы тестировать filter без fun1 *)
+  let gen_pred : (int -> bool) Gen.t =
+    Gen.oneofl
+      [ (fun x -> x mod 2 = 0)
+      ; (* even *)
+        (fun x -> x mod 2 <> 0)
+      ; (* odd *)
+        (fun x -> x >= 0)
+      ; (* non-negative *)
+        (fun x -> x < 10)
+      ; (* < 10 *)
+        (fun x -> x <> 0) (* not zero *)
+      ]
+  in
+  let arb_pred : (int -> bool) arbitrary = make ~print:(fun _ -> "<pred>") gen_pred in
+  let monoid_assoc =
+    Test.make
+      ~name:"append is associative"
+      (triple gen_int_set gen_int_set gen_int_set)
+      (fun (a, b, c) ->
+         let left = S.append a (S.append b c) in
+         let right = S.append (S.append a b) c in
+         S.equal left right)
+  in
+  let monoid_left_id =
+    Test.make ~name:"empty is left identity" gen_int_set (fun a ->
+      let res = S.append S.empty_monoid a in
+      S.equal res a)
+  in
+  let monoid_right_id =
+    Test.make ~name:"empty is right identity" gen_int_set (fun a ->
+      let res = S.append a S.empty_monoid in
+      S.equal res a)
+  in
+  let prop_add_mem =
+    Test.make ~name:"mem x (add x s)" (pair small_int gen_int_set) (fun (x, s) ->
+      let s' = S.add x s in
+      S.mem x s')
+  in
+  let prop_remove_not_mem =
+    Test.make ~name:"not (mem x (remove x s))" (pair small_int gen_int_set) (fun (x, s) ->
+      let s' = S.remove x s in
+      not (S.mem x s'))
+  in
+  let prop_filter_all_sat =
+    Test.make
+      ~name:"all elements of filter p s satisfy p"
+      (pair arb_pred gen_int_set)
+      (fun (p, s) ->
+         let s' = S.filter p s in
+         S.fold_left (fun ok x -> ok && p x) true s')
+  in
+  [ monoid_assoc
+  ; monoid_left_id
+  ; monoid_right_id
+  ; prop_add_mem
+  ; prop_remove_not_mem
+  ; prop_filter_all_sat
+  ]
+;;
+
+(* ---------- Запуск, как в первой лабе ---------- *)
 
 let () =
   let open Alcotest in
-  run "fp-lab-2 - rb-set" [ "unit", unit_tests ]
+  run
+    "fp-lab-2 – rb-set"
+    [ "unit", unit_tests
+    ; "properties", List.map QCheck_alcotest.to_alcotest qcheck_tests
+    ]
 ;;
