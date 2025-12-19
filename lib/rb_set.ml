@@ -74,6 +74,8 @@ let rec fold_right f t acc =
     fold_right f l acc2
 ;;
 
+let count t = fold_left (fun n _ -> n + 1) 0 t
+
 let remove x t = t |> to_list |> List.filter (fun y -> Stdlib.compare x y <> 0) |> of_list
 let map f t = to_list t |> List.map f |> of_list
 let filter p t = fold_left (fun acc x -> if p x then add x acc else acc) empty t

@@ -16,6 +16,8 @@ val of_list : 'a list -> 'a t
 
 val to_list : 'a t -> 'a list
 
+val count : 'a t -> int
+
 val map : ('a -> 'b) -> 'a t -> 'b t
 
 val filter : ('a -> bool) -> 'a t -> 'a t
