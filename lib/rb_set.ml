@@ -74,10 +74,14 @@ let rec fold_right f t acc =
     fold_right f l acc2
 ;;
 
+let count t = fold_left (fun n _ -> n + 1) 0 t
+
 let remove x t = t |> to_list |> List.filter (fun y -> Stdlib.compare x y <> 0) |> of_list
 let map f t = to_list t |> List.map f |> of_list
 let filter p t = fold_left (fun acc x -> if p x then add x acc else acc) empty t
 let append a b = fold_left (fun acc x -> add x acc) a b
+let intersection a b = fold_left (fun acc x -> if mem x b then add x acc else acc) empty a
+let difference a b = fold_left (fun acc x -> if mem x b then acc else add x acc) empty a
 let subset a b = fold_left (fun ok x -> ok && mem x b) true a
 let equal a b = subset a b && subset b a
 

@@ -2,3 +2,8 @@
  (public_name fp-lab-2)
  (name main)
  (libraries fp_lab_2))
+
+(executable
+ (public_name fp-lab-2-bench)
+ (name bench)
+ (libraries fp_lab_2 unix))

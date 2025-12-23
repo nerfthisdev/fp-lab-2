@@ -16,6 +16,8 @@ val of_list : 'a list -> 'a t
 
 val to_list : 'a t -> 'a list
 
+val count : 'a t -> int
+
 val map : ('a -> 'b) -> 'a t -> 'b t
 
 val filter : ('a -> bool) -> 'a t -> 'a t
@@ -30,6 +32,12 @@ val empty_monoid : 'a t
 
 (**appends sets **)
 val append : 'a t -> 'a t -> 'a t
+
+(**intersection of sets **)
+val intersection : 'a t -> 'a t -> 'a t
+
+(**difference of sets [a \ b] **)
+val difference : 'a t -> 'a t -> 'a t
 
 (**[subset a b] = true if every value from [a] is contained in [b] **)
 val subset : 'a t -> 'a t -> bool

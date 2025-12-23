@@ -10,10 +10,12 @@ homepage: "https://github.com/username/reponame"
 doc: "https://url/to/documentation"
 bug-reports: "https://github.com/username/reponame/issues"
 depends: [
-  "dune" {>= "3.20"}
   "ocaml"
+  "dune" {>= "3.20" & >= "3.20"}
+  "alcotest" {with-test}
+  "qcheck" {with-test}
+  "qcheck-alcotest" {with-test}
   "odoc" {with-doc}
-  "alcotest" {with-test & >= "0"}
 ]
 build: [
   ["dune" "subst"] {dev}
