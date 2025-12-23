@@ -84,6 +84,7 @@ let unit_tests =
 (* prop tests *)
 let qcheck_tests =
   let open QCheck in
+  let gen_small_nat = (Gen.small_nat [@alert "-deprecated"]) in
   (* Генератор случайных множеств int:
      берём список ints -> превращаем в set *)
   let gen_int_set : int S.t arbitrary =
@@ -92,21 +93,22 @@ let qcheck_tests =
         (* удобно, чтобы QCheck печатал контрпример *)
         let xs = S.to_list s in
         "[" ^ String.concat "; " (List.map string_of_int xs) ^ "]")
-      Gen.(map S.of_list (list small_int))
+      Gen.(map S.of_list (list gen_small_nat))
   in
   (* Набор предикатов, чтобы тестировать filter без fun1 *)
   let gen_pred : (int -> bool) Gen.t =
-    Gen.oneofl
-      [ (fun x -> x mod 2 = 0)
-      ; (* even *)
-        (fun x -> x mod 2 <> 0)
-      ; (* odd *)
-        (fun x -> x >= 0)
-      ; (* non-negative *)
-        (fun x -> x < 10)
-      ; (* < 10 *)
-        (fun x -> x <> 0) (* not zero *)
-      ]
+    (Gen.oneofl
+       [ (fun x -> x mod 2 = 0)
+       ; (* even *)
+         (fun x -> x mod 2 <> 0)
+       ; (* odd *)
+         (fun x -> x >= 0)
+       ; (* non-negative *)
+         (fun x -> x < 10)
+       ; (* < 10 *)
+         (fun x -> x <> 0) (* not zero *)
+       ]
+     [@alert "-deprecated"])
   in
   let arb_pred : (int -> bool) arbitrary = make ~print:(fun _ -> "<pred>") gen_pred in
   let monoid_assoc =
@@ -129,12 +131,14 @@ let qcheck_tests =
       S.equal res a)
   in
   let prop_add_mem =
-    Test.make ~name:"mem x (add x s)" (pair small_int gen_int_set) (fun (x, s) ->
+    let arb = pair (small_nat [@alert "-deprecated"]) gen_int_set in
+    Test.make ~name:"mem x (add x s)" arb (fun (x, s) ->
       let s' = S.add x s in
       S.mem x s')
   in
   let prop_remove_not_mem =
-    Test.make ~name:"not (mem x (remove x s))" (pair small_int gen_int_set) (fun (x, s) ->
+    let arb = pair (small_nat [@alert "-deprecated"]) gen_int_set in
+    Test.make ~name:"not (mem x (remove x s))" arb (fun (x, s) ->
       let s' = S.remove x s in
       not (S.mem x s'))
   in
