@@ -48,6 +48,8 @@ let balance = function
 map f t     (* порядок задаёт compare; дубликаты после f исчезают *)
 filter p t  (* добавляет только элементы, что удовлетворяют p *)
 append a b  (* объединение: fold add b в a *)
+intersection a b (* пересечение *)
+difference a b   (* разность: a \ b *)
 subset a b  (* все элементы a содержатся в b *)
 equal a b   (* взаимное subset *)
 ```
@@ -67,3 +69,12 @@ equal a b   (* взаимное subset *)
 
 ## исполняемый пример
 `bin/main.ml` строит множество `{1;2;3}` (дубликаты игнорируются) и печатает его с помощью `pp`.
+
+## бенчмарк
+```bash
+# бенчмарк операций add/mem/remove (по умолчанию 50000 элементов)
+dune exec fp-lab-2-bench
+
+# на другом размере
+dune exec fp-lab-2-bench -- -n 100000
+```

@@ -33,6 +33,12 @@ val empty_monoid : 'a t
 (**appends sets **)
 val append : 'a t -> 'a t -> 'a t
 
+(**intersection of sets **)
+val intersection : 'a t -> 'a t -> 'a t
+
+(**difference of sets [a \ b] **)
+val difference : 'a t -> 'a t -> 'a t
+
 (**[subset a b] = true if every value from [a] is contained in [b] **)
 val subset : 'a t -> 'a t -> bool
 

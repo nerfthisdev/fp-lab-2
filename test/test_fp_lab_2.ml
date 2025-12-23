@@ -49,6 +49,22 @@ let test_remove () =
   Alcotest.(check bool) "mem 2 stays" true (S.mem 2 s')
 ;;
 
+let test_intersection () =
+  let a = S.of_list [ 1; 2; 3; 4 ] in
+  let b = S.of_list [ 3; 4; 5 ] in
+  let i = S.intersection a b in
+  let lst = S.to_list i in
+  Alcotest.(check (list int)) "intersection" [ 3; 4 ] lst
+;;
+
+let test_difference () =
+  let a = S.of_list [ 1; 2; 3; 4 ] in
+  let b = S.of_list [ 3; 4; 5 ] in
+  let d = S.difference a b in
+  let lst = S.to_list d in
+  Alcotest.(check (list int)) "difference" [ 1; 2 ] lst
+;;
+
 let unit_tests =
   let open Alcotest in
   [ test_case "empty is empty" `Quick test_empty_is_empty
@@ -58,6 +74,8 @@ let unit_tests =
   ; test_case "map" `Quick test_map
   ; test_case "append (union)" `Quick test_append_union
   ; test_case "remove" `Quick test_remove
+  ; test_case "intersection" `Quick test_intersection
+  ; test_case "difference" `Quick test_difference
   ]
 ;;
 
