@@ -1,6 +1,46 @@
 open Fp_lab_2
 module S = Rb_set
 
+let env_int name default =
+  match Sys.getenv_opt name with
+  | None -> default
+  | Some v ->
+      (try int_of_string v with
+       | Failure _ -> default
+       | Invalid_argument _ -> default)
+;;
+
+let make_data n =
+  let max_v = (n * 3) + 1 in
+  List.init n (fun _ -> Random.int max_v)
+;;
+
+let build_set data =
+  List.fold_left (fun acc x -> S.add x acc) S.empty data
+;;
+
+let run_benchmarks () =
+  Random.init 0;
+  let n = env_int "FP_LAB_2_BENCH_N" 1_000 in
+  let seconds = max 1 (env_int "FP_LAB_2_BENCH_SECONDS" 1) in
+  let repeat = max 1 (env_int "FP_LAB_2_BENCH_REPEAT" 3) in
+  let data = make_data n in
+  let s = build_set data in
+  let benches : (string * (unit -> unit) * unit) list =
+    [ (Format.sprintf "add (%d)" n, (fun () -> ignore (build_set data)), ())
+    ; ( Format.sprintf "mem (%d)" n
+      , (fun () -> List.iter (fun x -> ignore (S.mem x s)) data)
+      , () )
+    ; ( Format.sprintf "remove (%d)" n
+      , (fun () -> ignore (List.fold_left (fun acc x -> S.remove x acc) s data))
+      , () )
+    ]
+  in
+  let results = Benchmark.throughputN ~repeat seconds benches in
+  Benchmark.tabulate results;
+  Benchmark.print_gc results
+;;
+
 (*unit tests*)
 let test_empty_is_empty () =
   let s : int S.t = S.empty in
@@ -77,6 +117,11 @@ let unit_tests =
   ; test_case "intersection" `Quick test_intersection
   ; test_case "difference" `Quick test_difference
   ]
+;;
+
+let bench_tests =
+  let open Alcotest in
+  [ test_case "rb-set ops" `Slow run_benchmarks ]
 ;;
 
 (*prop tests*)
@@ -167,5 +212,6 @@ let () =
     "fp-lab-2 – rb-set"
     [ "unit", unit_tests
     ; "properties", List.map QCheck_alcotest.to_alcotest qcheck_tests
+    ; "bench", bench_tests
     ]
 ;;

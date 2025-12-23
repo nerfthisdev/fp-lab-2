@@ -6,4 +6,4 @@
 (executable
  (public_name fp-lab-2-bench)
  (name bench)
- (libraries fp_lab_2 unix))
+ (libraries benchmark fp_lab_2))
