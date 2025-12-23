@@ -23,6 +23,7 @@
   ocaml
   (dune (>= 3.20))
   (alcotest :with-test)
+  benchmark
   (qcheck :with-test)
   (qcheck-alcotest :with-test))
  (tags

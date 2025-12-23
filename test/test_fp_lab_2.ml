@@ -1,6 +1,46 @@
 open Fp_lab_2
 module S = Rb_set
 
+let env_int name default =
+  match Sys.getenv_opt name with
+  | None -> default
+  | Some v ->
+      (try int_of_string v with
+       | Failure _ -> default
+       | Invalid_argument _ -> default)
+;;
+
+let make_data n =
+  let max_v = (n * 3) + 1 in
+  List.init n (fun _ -> Random.int max_v)
+;;
+
+let build_set data =
+  List.fold_left (fun acc x -> S.add x acc) S.empty data
+;;
+
+let run_benchmarks () =
+  Random.init 0;
+  let n = env_int "FP_LAB_2_BENCH_N" 1_000 in
+  let seconds = max 1 (env_int "FP_LAB_2_BENCH_SECONDS" 1) in
+  let repeat = max 1 (env_int "FP_LAB_2_BENCH_REPEAT" 3) in
+  let data = make_data n in
+  let s = build_set data in
+  let benches : (string * (unit -> unit) * unit) list =
+    [ (Format.sprintf "add (%d)" n, (fun () -> ignore (build_set data)), ())
+    ; ( Format.sprintf "mem (%d)" n
+      , (fun () -> List.iter (fun x -> ignore (S.mem x s)) data)
+      , () )
+    ; ( Format.sprintf "remove (%d)" n
+      , (fun () -> ignore (List.fold_left (fun acc x -> S.remove x acc) s data))
+      , () )
+    ]
+  in
+  let results = Benchmark.throughputN ~repeat seconds benches in
+  Benchmark.tabulate results;
+  Benchmark.print_gc results
+;;
+
 (*unit tests*)
 let test_empty_is_empty () =
   let s : int S.t = S.empty in
@@ -79,11 +119,17 @@ let unit_tests =
   ]
 ;;
 
+let bench_tests =
+  let open Alcotest in
+  [ test_case "rb-set ops" `Slow run_benchmarks ]
+;;
+
 (*prop tests*)
 
 (* prop tests *)
 let qcheck_tests =
   let open QCheck in
+  let gen_small_nat = (Gen.small_nat [@alert "-deprecated"]) in
   (* Генератор случайных множеств int:
      берём список ints -> превращаем в set *)
   let gen_int_set : int S.t arbitrary =
@@ -92,21 +138,22 @@ let qcheck_tests =
         (* удобно, чтобы QCheck печатал контрпример *)
         let xs = S.to_list s in
         "[" ^ String.concat "; " (List.map string_of_int xs) ^ "]")
-      Gen.(map S.of_list (list small_int))
+      Gen.(map S.of_list (list gen_small_nat))
   in
   (* Набор предикатов, чтобы тестировать filter без fun1 *)
   let gen_pred : (int -> bool) Gen.t =
-    Gen.oneofl
-      [ (fun x -> x mod 2 = 0)
-      ; (* even *)
-        (fun x -> x mod 2 <> 0)
-      ; (* odd *)
-        (fun x -> x >= 0)
-      ; (* non-negative *)
-        (fun x -> x < 10)
-      ; (* < 10 *)
-        (fun x -> x <> 0) (* not zero *)
-      ]
+    (Gen.oneofl
+       [ (fun x -> x mod 2 = 0)
+       ; (* even *)
+         (fun x -> x mod 2 <> 0)
+       ; (* odd *)
+         (fun x -> x >= 0)
+       ; (* non-negative *)
+         (fun x -> x < 10)
+       ; (* < 10 *)
+         (fun x -> x <> 0) (* not zero *)
+       ]
+     [@alert "-deprecated"])
   in
   let arb_pred : (int -> bool) arbitrary = make ~print:(fun _ -> "<pred>") gen_pred in
   let monoid_assoc =
@@ -129,12 +176,14 @@ let qcheck_tests =
       S.equal res a)
   in
   let prop_add_mem =
-    Test.make ~name:"mem x (add x s)" (pair small_int gen_int_set) (fun (x, s) ->
+    let arb = pair (small_nat [@alert "-deprecated"]) gen_int_set in
+    Test.make ~name:"mem x (add x s)" arb (fun (x, s) ->
       let s' = S.add x s in
       S.mem x s')
   in
   let prop_remove_not_mem =
-    Test.make ~name:"not (mem x (remove x s))" (pair small_int gen_int_set) (fun (x, s) ->
+    let arb = pair (small_nat [@alert "-deprecated"]) gen_int_set in
+    Test.make ~name:"not (mem x (remove x s))" arb (fun (x, s) ->
       let s' = S.remove x s in
       not (S.mem x s'))
   in
@@ -163,5 +212,6 @@ let () =
     "fp-lab-2 – rb-set"
     [ "unit", unit_tests
     ; "properties", List.map QCheck_alcotest.to_alcotest qcheck_tests
+    ; "bench", bench_tests
     ]
 ;;
